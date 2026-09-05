@@ -6,6 +6,7 @@ export default function Home() {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [isHovering, setIsHovering] = useState(false);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -32,8 +33,17 @@ export default function Home() {
     <div style={styles.container}>
       <h1 style={styles.title}>🎙️ Amharic Voice Recognizer</h1>
       <div style={styles.card}>
-        <input type="file" accept=".wav" onChange={handleFileChange} style={styles.input} />
-        <button onClick={handleUpload} style={styles.button} disabled={loading}>
+        <input type="file" accept=".wav" onChange={handleFileChange} style={styles.input } />
+        <button
+          onClick={handleUpload}
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
+          style={{
+            ...styles.button,
+            cursor: loading ? 'not-allowed' : isHovering ? 'pointer' : 'pointer',
+          }}
+          disabled={loading}
+        >
           {loading ? 'Processing...' : 'Predict Voice'}
         </button>
 
