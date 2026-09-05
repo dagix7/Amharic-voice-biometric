@@ -16,18 +16,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-model = tf.keras.models.load_model("amharic_voice_model.h5")
+model = tf.keras.models.load_model("amharic_voice_model2.h5")
 
-def audio_to_spectrogram(file_bytes, target_size=(128, 128)):
-    audio, sr = librosa.load(io.BytesIO(file_bytes), sr=16000, duration=3.0)
+def audio_to_spectrogram(file_bytes, target_width=350):
+    audio, sr = librosa.load(io.BytesIO(file_bytes), sr=16000)
     mel_spec = librosa.feature.melspectrogram(y=audio, sr=sr, n_mels=128, fmax=8000)
     log_mel = librosa.power_to_db(mel_spec)
     log_mel = (log_mel - np.min(log_mel)) / (np.max(log_mel) - np.min(log_mel) + 1e-6)
     log_mel = (log_mel * 255).astype(np.uint8)
-    img = cv2.resize(log_mel, target_size)
-    img_rgb = np.stack([img, img, img], axis=-1)
+    current_width = log_mel.shape[1]
+    if current_width < target_width:
+        pad_width = target_width - current_width
+        log_mel = np.pad(log_mel, ((0, 0), (0, pad_width)), mode='constant', constant_values=0)
+    elif current_width > target_width:
+        log_mel = log_mel[:, :target_width]
+    img_rgb = np.stack([log_mel, log_mel, log_mel], axis=-1)
     return img_rgb.astype('float32') / 255.0
-
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
     contents = await file.read()
